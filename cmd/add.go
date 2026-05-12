@@ -8,9 +8,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/envault/envault/internal/backend"
-	"github.com/envault/envault/internal/dotenv"
-	"github.com/envault/envault/internal/profile"
+	"github.com/Wa-Constellation/envault/internal/backend"
+	"github.com/Wa-Constellation/envault/internal/dotenv"
+	"github.com/Wa-Constellation/envault/internal/profile"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
@@ -116,8 +116,8 @@ func runAdd(cmd *cobra.Command, args []string) error {
 			} else {
 				// KEY only — prompt interactively
 				fmt.Fprintf(os.Stderr, "Enter value for %s: ", key)
-				value, err := term.ReadPassword(int(syscall.Stdin))
-				fmt.Fprintln(os.Stderr) // newline after password input
+				value, err := term.ReadPassword(int(syscall.Stdin)) //nolint:unconvert // syscall.Stdin is uintptr on Windows
+				fmt.Fprintln(os.Stderr)                             // newline after password input
 				if err != nil {
 					return fmt.Errorf("reading value for %s: %w", key, err)
 				}

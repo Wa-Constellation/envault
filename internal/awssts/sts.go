@@ -10,10 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 )
 
+// These are AWS env-var KEY NAMES, not credentials. The gosec G101 warnings
+// they trigger are false positives.
 const (
-	KeyAccessKeyID     = "AWS_ACCESS_KEY_ID"
-	KeySecretAccessKey = "AWS_SECRET_ACCESS_KEY"
-	KeySessionToken    = "AWS_SESSION_TOKEN"
+	KeyAccessKeyID     = "AWS_ACCESS_KEY_ID"     //nolint:gosec // G101: env var name
+	KeySecretAccessKey = "AWS_SECRET_ACCESS_KEY" //nolint:gosec // G101: env var name
+	KeySessionToken    = "AWS_SESSION_TOKEN"     //nolint:gosec // G101: env var name
 	KeyDefaultRegion   = "AWS_DEFAULT_REGION"
 	KeyRegion          = "AWS_REGION"
 	KeyRoleARN         = "AWS_ROLE_ARN"

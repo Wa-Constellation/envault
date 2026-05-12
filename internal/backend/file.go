@@ -9,7 +9,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/envault/envault/internal/crypto"
+	"github.com/Wa-Constellation/envault/internal/crypto"
 	"golang.org/x/term"
 )
 
@@ -55,8 +55,8 @@ func (fb *FileBackend) getPassphrase() ([]byte, error) {
 
 	// Prompt user
 	fmt.Fprint(os.Stderr, "Enter vault passphrase: ")
-	pass, err := term.ReadPassword(int(syscall.Stdin))
-	fmt.Fprintln(os.Stderr) // newline after password input
+	pass, err := term.ReadPassword(int(syscall.Stdin)) //nolint:unconvert // syscall.Stdin is uintptr on Windows
+	fmt.Fprintln(os.Stderr)                            // newline after password input
 	if err != nil {
 		return nil, fmt.Errorf("reading passphrase: %w", err)
 	}
@@ -172,25 +172,25 @@ func (fb *FileBackend) writeVault(profiles map[string]json.RawMessage, existingS
 
 	// Set permissions before writing data
 	if err := tmpFile.Chmod(0600); err != nil {
-		tmpFile.Close()
-		os.Remove(tmpPath)
+		_ = tmpFile.Close()
+		_ = os.Remove(tmpPath)
 		return fmt.Errorf("setting file permissions: %w", err)
 	}
 
 	if _, err := tmpFile.Write(buf); err != nil {
-		tmpFile.Close()
-		os.Remove(tmpPath)
+		_ = tmpFile.Close()
+		_ = os.Remove(tmpPath)
 		return fmt.Errorf("writing vault data: %w", err)
 	}
 
 	if err := tmpFile.Close(); err != nil {
-		os.Remove(tmpPath)
+		_ = os.Remove(tmpPath)
 		return fmt.Errorf("closing temp file: %w", err)
 	}
 
 	// Atomic rename
 	if err := os.Rename(tmpPath, fb.Path); err != nil {
-		os.Remove(tmpPath)
+		_ = os.Remove(tmpPath)
 		return fmt.Errorf("renaming vault file: %w", err)
 	}
 

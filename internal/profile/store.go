@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/envault/envault/internal/backend"
+	"github.com/Wa-Constellation/envault/internal/backend"
 )
 
 // Store provides high-level CRUD for profiles using a Backend.

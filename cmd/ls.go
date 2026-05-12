@@ -5,7 +5,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/envault/envault/internal/profile"
+	"github.com/Wa-Constellation/envault/internal/profile"
 	"github.com/spf13/cobra"
 )
 

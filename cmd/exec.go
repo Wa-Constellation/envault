@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/envault/envault/internal/awssts"
-	"github.com/envault/envault/internal/profile"
+	"github.com/Wa-Constellation/envault/internal/awssts"
+	"github.com/Wa-Constellation/envault/internal/profile"
 	"github.com/spf13/cobra"
 )
 
@@ -38,8 +38,7 @@ func runExec(cmd *cobra.Command, args []string) error {
 	// Find the command after "--"
 	dashIdx := cmd.ArgsLenAtDash()
 	if dashIdx == -1 {
-		return fmt.Errorf("usage: envault exec <profile> -- <command> [args...]\n" +
-			"The -- separator is required before the command.")
+		return fmt.Errorf("usage: envault exec <profile> -- <command> [args...]; the -- separator is required before the command")
 	}
 
 	childArgs := args[dashIdx:]
@@ -116,8 +115,10 @@ func runExec(cmd *cobra.Command, args []string) error {
 		env = append(env, k+"="+v)
 	}
 
-	// Spawn child
-	child := exec.Command(childArgs[0], childArgs[1:]...)
+	// Spawn child. The whole point of `envault exec` is to run an
+	// arbitrary user-supplied command — gosec's tainted-input warning
+	// here is by design.
+	child := exec.Command(childArgs[0], childArgs[1:]...) //nolint:gosec // G204
 	child.Env = env
 	child.Stdin = os.Stdin
 	child.Stdout = os.Stdout

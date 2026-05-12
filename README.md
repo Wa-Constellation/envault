@@ -5,13 +5,13 @@ Encrypted environment variable manager. Store secrets in profiles, inject them i
 ## Install
 
 ```bash
-go install github.com/envault/envault@latest
+go install github.com/Wa-Constellation/envault@latest
 ```
 
 Or build from source:
 
 ```bash
-git clone https://github.com/envault/envault.git
+git clone https://github.com/Wa-Constellation/envault.git
 cd envault
 make build
 ```

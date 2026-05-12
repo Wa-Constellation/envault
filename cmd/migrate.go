@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/envault/envault/internal/backend"
-	"github.com/envault/envault/internal/profile"
+	"github.com/Wa-Constellation/envault/internal/backend"
+	"github.com/Wa-Constellation/envault/internal/profile"
 	"github.com/spf13/cobra"
 )
 

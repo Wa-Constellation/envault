@@ -110,7 +110,7 @@ func (c *Config) Save(path string) error {
 	if err != nil {
 		return fmt.Errorf("creating config file: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	enc := toml.NewEncoder(f)
 	if err := enc.Encode(c); err != nil {

@@ -7,8 +7,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/envault/envault/internal/awssts"
-	"github.com/envault/envault/internal/dotenv"
+	"github.com/Wa-Constellation/envault/internal/awssts"
+	"github.com/Wa-Constellation/envault/internal/dotenv"
 	"github.com/spf13/cobra"
 )
 

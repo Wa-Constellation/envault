@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/envault/envault/internal/backend"
+	"github.com/Wa-Constellation/envault/internal/backend"
 )
 
 func newTestStore(t *testing.T) *Store {

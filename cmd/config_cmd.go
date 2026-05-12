@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/envault/envault/internal/config"
+	"github.com/Wa-Constellation/envault/internal/config"
 	"github.com/spf13/cobra"
 )
 

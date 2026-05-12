@@ -1,4 +1,4 @@
-module github.com/envault/envault
+module github.com/Wa-Constellation/envault
 
 go 1.24
 

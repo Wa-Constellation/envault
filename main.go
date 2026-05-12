@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/envault/envault/cmd"
+	"github.com/Wa-Constellation/envault/cmd"
 )
 
 // version is set at build time via -ldflags
