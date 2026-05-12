@@ -117,6 +117,55 @@ func TestParseInlineComment(t *testing.T) {
 	}
 }
 
+func TestParseErrorReportsLineNumber(t *testing.T) {
+	// Error is on line 3 — assert the reported line number is correct, not
+	// just that an error occurs. (Catches off-by-one or direction errors in
+	// the line counter.)
+	input := "KEY1=value1\nKEY2=value2\nBAD_LINE_NO_EQUALS\n"
+	_, err := Parse(strings.NewReader(input))
+	if err == nil {
+		t.Fatal("expected error for line without =")
+	}
+	if !strings.Contains(err.Error(), "line 3") {
+		t.Errorf("expected error to mention 'line 3', got: %v", err)
+	}
+}
+
+func TestParseEmptySingleQuoted(t *testing.T) {
+	// '' is a valid empty literal — must not be mistaken for an unterminated
+	// single quote.
+	vars, err := Parse(strings.NewReader("KEY=''\n"))
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	if v, ok := vars["KEY"]; !ok || v != "" {
+		t.Errorf("KEY: got %q (ok=%v), want empty string", v, ok)
+	}
+}
+
+func TestParseEmptyDoubleQuoted(t *testing.T) {
+	// Same idea for "".
+	vars, err := Parse(strings.NewReader(`KEY=""` + "\n"))
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	if v, ok := vars["KEY"]; !ok || v != "" {
+		t.Errorf("KEY: got %q (ok=%v), want empty string", v, ok)
+	}
+}
+
+func TestParseTrailingBackslashInDoubleQuoted(t *testing.T) {
+	// `KEY="foo\"` — backslash is the last char inside the quotes. The escape
+	// handler must not try to read past the end (which would panic).
+	vars, err := Parse(strings.NewReader(`KEY="foo\"` + "\n"))
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	if vars["KEY"] != `foo\` {
+		t.Errorf("KEY: got %q, want %q", vars["KEY"], `foo\`)
+	}
+}
+
 func TestParseEmptyValue(t *testing.T) {
 	input := `KEY=
 `

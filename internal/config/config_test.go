@@ -16,6 +16,29 @@ func TestDefaultConfig(t *testing.T) {
 	}
 }
 
+func TestDefaultPathsUseHomeDir(t *testing.T) {
+	// Assert the default paths are actually rooted at the user's home dir
+	// when UserHomeDir succeeds (i.e., the err-handling branch picks the
+	// right side). Without this, a flipped `if err != nil` would silently
+	// fall back to "." in the happy path.
+	home, err := os.UserHomeDir()
+	if err != nil {
+		t.Skip("no home dir on this system")
+	}
+
+	vault := DefaultVaultPath()
+	wantVault := filepath.Join(home, DefaultConfigDir, DefaultVaultName)
+	if vault != wantVault {
+		t.Errorf("DefaultVaultPath: got %q, want %q", vault, wantVault)
+	}
+
+	cfgPath := DefaultConfigPath()
+	wantCfg := filepath.Join(home, DefaultConfigDir, DefaultConfigName)
+	if cfgPath != wantCfg {
+		t.Errorf("DefaultConfigPath: got %q, want %q", cfgPath, wantCfg)
+	}
+}
+
 func TestLoadMissing(t *testing.T) {
 	cfg, err := Load("/nonexistent/path/config.toml")
 	if err != nil {
