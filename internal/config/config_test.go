@@ -26,6 +26,33 @@ func TestLoadMissing(t *testing.T) {
 	}
 }
 
+func TestLoadExpandsTildeInVaultFile(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.toml")
+
+	if err := os.WriteFile(path, []byte(`backend = "file"
+vault_file = "~/secrets/vault.enc"
+default_ttl = "0"
+`), 0600); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		t.Skip("no home dir on this system")
+	}
+
+	loaded, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+
+	want := filepath.Join(home, "secrets/vault.enc")
+	if loaded.VaultFile != want {
+		t.Errorf("vault_file: got %q, want %q", loaded.VaultFile, want)
+	}
+}
+
 func TestSaveAndLoad(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.toml")

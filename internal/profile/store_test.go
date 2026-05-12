@@ -202,14 +202,14 @@ func TestProfileResolveNoInheritance(t *testing.T) {
 }
 
 func TestValidateProfileName(t *testing.T) {
-	valid := []string{"dev", "prod-us", "my.project", "test_123", "a"}
+	valid := []string{"dev", "prod-us", "my.project", "test_123", "a", "_leading-underscore"}
 	for _, name := range valid {
 		if err := ValidateProfileName(name); err != nil {
 			t.Errorf("ValidateProfileName(%q): unexpected error: %v", name, err)
 		}
 	}
 
-	invalid := []string{"", "__reserved", "-starts-with-dash", ".starts-with-dot"}
+	invalid := []string{"", "__reserved", "__envault_index__", "-starts-with-dash", ".starts-with-dot"}
 	for _, name := range invalid {
 		if err := ValidateProfileName(name); err == nil {
 			t.Errorf("ValidateProfileName(%q): expected error", name)

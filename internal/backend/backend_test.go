@@ -1,9 +1,11 @@
 package backend
 
 import (
+	"encoding/binary"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"testing"
 )
 
@@ -120,6 +122,101 @@ func TestFileBackendOverwrite(t *testing.T) {
 	if string(got) != string(data2) {
 		t.Errorf("overwritten Get: got %q, want %q", got, data2)
 	}
+}
+
+func TestFileBackendBadMagic(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "vault.enc")
+	os.Setenv("ENVAULT_PASSPHRASE", "test-passphrase-123")
+	t.Cleanup(func() { os.Unsetenv("ENVAULT_PASSPHRASE") })
+
+	// Write garbage with valid length but bad magic.
+	junk := make([]byte, headerSize+16)
+	copy(junk, []byte("XXXX"))
+	if err := os.WriteFile(path, junk, 0600); err != nil {
+		t.Fatalf("write junk: %v", err)
+	}
+
+	fb := NewFileBackend(path)
+	_, err := fb.Get("anything")
+	if err == nil || !strings.Contains(err.Error(), "magic") {
+		t.Errorf("expected bad-magic error, got %v", err)
+	}
+}
+
+func TestFileBackendTruncated(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "vault.enc")
+	os.Setenv("ENVAULT_PASSPHRASE", "test-passphrase-123")
+	t.Cleanup(func() { os.Unsetenv("ENVAULT_PASSPHRASE") })
+
+	// File shorter than the header.
+	if err := os.WriteFile(path, []byte("ENVT"), 0600); err != nil {
+		t.Fatalf("write truncated: %v", err)
+	}
+
+	fb := NewFileBackend(path)
+	_, err := fb.Get("anything")
+	if err == nil || !strings.Contains(err.Error(), "too small") {
+		t.Errorf("expected truncated-file error, got %v", err)
+	}
+}
+
+func TestFileBackendVersionMismatch(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "vault.enc")
+	os.Setenv("ENVAULT_PASSPHRASE", "test-passphrase-123")
+	t.Cleanup(func() { os.Unsetenv("ENVAULT_PASSPHRASE") })
+
+	// Valid magic + bogus version + padding to header length.
+	buf := make([]byte, headerSize+16)
+	copy(buf, magicBytes[:])
+	binary.BigEndian.PutUint16(buf[4:6], 999)
+
+	if err := os.WriteFile(path, buf, 0600); err != nil {
+		t.Fatalf("write version-mismatch file: %v", err)
+	}
+
+	fb := NewFileBackend(path)
+	_, err := fb.Get("anything")
+	if err == nil || !strings.Contains(err.Error(), "unsupported vault version") {
+		t.Errorf("expected version error, got %v", err)
+	}
+}
+
+func TestFileBackendWrongPassphraseClearsCache(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "vault.enc")
+
+	// Create a vault with the correct passphrase.
+	os.Setenv("ENVAULT_PASSPHRASE", "correct-passphrase")
+	fb := NewFileBackend(path)
+	if err := fb.Put("test", []byte(`{"name":"test"}`)); err != nil {
+		t.Fatalf("Put: %v", err)
+	}
+
+	// Open a fresh backend with the wrong passphrase. The decryption failure
+	// must clear the cached passphrase so a later call can succeed.
+	os.Setenv("ENVAULT_PASSPHRASE", "wrong-passphrase")
+	fb2 := NewFileBackend(path)
+	if _, err := fb2.Get("test"); err == nil {
+		t.Fatal("expected decryption error with wrong passphrase")
+	}
+	if fb2.passphrase != nil {
+		t.Errorf("expected cached passphrase to be cleared after failure, got %q", string(fb2.passphrase))
+	}
+
+	// Now provide the correct one — same backend instance — and verify recovery.
+	os.Setenv("ENVAULT_PASSPHRASE", "correct-passphrase")
+	got, err := fb2.Get("test")
+	if err != nil {
+		t.Fatalf("Get after correcting passphrase: %v", err)
+	}
+	if string(got) != `{"name":"test"}` {
+		t.Errorf("Get after retry: got %q, want %q", got, `{"name":"test"}`)
+	}
+
+	os.Unsetenv("ENVAULT_PASSPHRASE")
 }
 
 func TestFileBackendMultipleProfiles(t *testing.T) {

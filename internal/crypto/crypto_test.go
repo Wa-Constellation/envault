@@ -76,6 +76,37 @@ func TestDeriveKeyDeterministic(t *testing.T) {
 	}
 }
 
+func TestTamperedCiphertext(t *testing.T) {
+	salt, err := GenerateSalt()
+	if err != nil {
+		t.Fatalf("GenerateSalt: %v", err)
+	}
+	key := DeriveKey([]byte("passphrase"), salt)
+
+	nonce, ciphertext, err := Encrypt([]byte("secret data"), key)
+	if err != nil {
+		t.Fatalf("Encrypt: %v", err)
+	}
+
+	// Flip one byte in the ciphertext; GCM's auth tag must reject it.
+	tampered := make([]byte, len(ciphertext))
+	copy(tampered, ciphertext)
+	tampered[0] ^= 0x01
+
+	if _, err := Decrypt(tampered, key, nonce); err == nil {
+		t.Fatal("expected error decrypting tampered ciphertext, got nil")
+	}
+
+	// Tampering with the auth tag (last byte) must also fail.
+	tampered = make([]byte, len(ciphertext))
+	copy(tampered, ciphertext)
+	tampered[len(tampered)-1] ^= 0x01
+
+	if _, err := Decrypt(tampered, key, nonce); err == nil {
+		t.Fatal("expected error decrypting ciphertext with mutated auth tag, got nil")
+	}
+}
+
 func TestDeriveKeyDifferentSalts(t *testing.T) {
 	passphrase := []byte("my-passphrase")
 	salt1 := []byte("0123456789abcdef0123456789abcdef")
