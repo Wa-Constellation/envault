@@ -1,0 +1,29 @@
+name: Mutation Testing
+
+on:
+  schedule:
+    # Weekly, Monday 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gremlins:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Install gremlins
+        run: go install github.com/go-gremlins/gremlins/cmd/gremlins@latest
+
+      - name: Run gremlins
+        # --timeout-coefficient 10 to accommodate Argon2id-bound tests in
+        # the backend and profile packages.
+        run: gremlins unleash --timeout-coefficient 10 --threshold-efficacy 90
