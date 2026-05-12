@@ -1,0 +1,42 @@
+# Build artifacts
+/envault
+*.exe
+*.test
+*.out
+/dist/
+
+# Go
+vendor/
+coverage.txt
+coverage.html
+*.prof
+
+# Local env / secrets — never commit
+.env
+.env.*
+!testdata/*.env
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa
+id_rsa.*
+*.crt
+*.cer
+
+# Envault local data (in case anyone symlinks it here)
+vault.enc
+*.enc
+config.toml
+
+# Editor / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Claude / agent scratch
+.claude/
