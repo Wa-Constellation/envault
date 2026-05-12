@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -83,15 +84,16 @@ func (p *Profile) Resolve(store *Store) (map[string]string, error) {
 	return merged, nil
 }
 
-// Profile name validation
-var validProfileName = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$`)
+// Profile name validation. Leading single underscore is allowed; the double-
+// underscore prefix is reserved for internal sentinels (see keyring backend).
+var validProfileName = regexp.MustCompile(`^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$`)
 
 // ValidateProfileName checks that a profile name is valid.
 func ValidateProfileName(name string) error {
 	if !validProfileName.MatchString(name) {
-		return fmt.Errorf("invalid profile name %q: must be 1-128 chars, alphanumeric/hyphens/underscores/dots, cannot start with '__'", name)
+		return fmt.Errorf("invalid profile name %q: must be 1-128 chars, alphanumeric/hyphens/underscores/dots, must start with alphanumeric or '_'", name)
 	}
-	if len(name) >= 2 && name[:2] == "__" {
+	if strings.HasPrefix(name, "__") {
 		return fmt.Errorf("invalid profile name %q: names starting with '__' are reserved", name)
 	}
 	return nil

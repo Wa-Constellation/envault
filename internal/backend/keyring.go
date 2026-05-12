@@ -2,6 +2,7 @@ package backend
 
 import (
 	"encoding/json"
+	"errors"
 	"sort"
 
 	"github.com/zalando/go-keyring"
@@ -23,7 +24,7 @@ func NewKeyringBackend() *KeyringBackend {
 func (kb *KeyringBackend) getIndex() ([]string, error) {
 	data, err := keyring.Get(keyringService, keyringIndex)
 	if err != nil {
-		if err == keyring.ErrNotFound {
+		if errors.Is(err, keyring.ErrNotFound) {
 			return []string{}, nil
 		}
 		return nil, err
@@ -48,7 +49,7 @@ func (kb *KeyringBackend) setIndex(names []string) error {
 func (kb *KeyringBackend) Get(profileName string) ([]byte, error) {
 	data, err := keyring.Get(keyringService, profileName)
 	if err != nil {
-		if err == keyring.ErrNotFound {
+		if errors.Is(err, keyring.ErrNotFound) {
 			return nil, ErrProfileNotFound
 		}
 		return nil, err
@@ -57,17 +58,15 @@ func (kb *KeyringBackend) Get(profileName string) ([]byte, error) {
 }
 
 func (kb *KeyringBackend) Put(profileName string, data []byte) error {
-	if err := keyring.Set(keyringService, profileName, string(data)); err != nil {
-		return err
-	}
-
-	// Update index
+	// Update the index FIRST when adding a new entry. If the data write later
+	// fails, we leave a "phantom" index entry — visible to List, returns
+	// ErrProfileNotFound on Get — which self-heals on a retry. The reverse
+	// order would orphan the data: written to the keyring but invisible.
 	names, err := kb.getIndex()
 	if err != nil {
 		return err
 	}
 
-	// Add name if not already present
 	found := false
 	for _, n := range names {
 		if n == profileName {
@@ -77,15 +76,18 @@ func (kb *KeyringBackend) Put(profileName string, data []byte) error {
 	}
 	if !found {
 		names = append(names, profileName)
-		return kb.setIndex(names)
+		if err := kb.setIndex(names); err != nil {
+			return err
+		}
 	}
-	return nil
+
+	return keyring.Set(keyringService, profileName, string(data))
 }
 
 func (kb *KeyringBackend) Delete(profileName string) error {
 	err := keyring.Delete(keyringService, profileName)
 	if err != nil {
-		if err == keyring.ErrNotFound {
+		if errors.Is(err, keyring.ErrNotFound) {
 			return ErrProfileNotFound
 		}
 		return err

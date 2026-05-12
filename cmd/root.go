@@ -87,7 +87,7 @@ func getStore() (*profile.Store, error) {
 }
 
 // verboseLog prints a message if verbose mode is enabled.
-func verboseLog(format string, args ...interface{}) {
+func verboseLog(format string, args ...any) {
 	if verbose {
 		fmt.Fprintf(os.Stderr, "[verbose] "+format+"\n", args...)
 	}

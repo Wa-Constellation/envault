@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 )
@@ -69,12 +70,29 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("parsing config %s: %w", path, err)
 	}
 
-	// Expand ~ in vault file path
 	if cfg.VaultFile == "" {
 		cfg.VaultFile = DefaultVaultPath()
+	} else {
+		cfg.VaultFile = expandHome(cfg.VaultFile)
 	}
 
 	return cfg, nil
+}
+
+// expandHome resolves a leading "~" or "~/" to the user's home directory.
+// If the home directory cannot be determined, the path is returned unchanged.
+func expandHome(path string) string {
+	if path == "~" || strings.HasPrefix(path, "~/") {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return path
+		}
+		if path == "~" {
+			return home
+		}
+		return filepath.Join(home, path[2:])
+	}
+	return path
 }
 
 // Save writes the config to the given path, creating directories as needed.

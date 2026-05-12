@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -52,7 +53,7 @@ func runAdd(cmd *cobra.Command, args []string) error {
 	// Load existing profile or create new
 	p, err := store.Get(profileName)
 	if err != nil {
-		if err == backend.ErrProfileNotFound {
+		if errors.Is(err, backend.ErrProfileNotFound) {
 			p = &profile.Profile{
 				Name:      profileName,
 				Vars:      make(map[string]string),

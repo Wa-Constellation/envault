@@ -42,8 +42,13 @@ func (fb *FileBackend) getPassphrase() ([]byte, error) {
 		return fb.passphrase, nil
 	}
 
-	// Check env var first (for CI/automation)
-	if p := os.Getenv("ENVAULT_PASSPHRASE"); p != "" {
+	// Check env var first (for CI/automation). An explicitly empty value is
+	// rejected to match the interactive path — an empty passphrase silently
+	// deriving a key would be a footgun.
+	if p, ok := os.LookupEnv("ENVAULT_PASSPHRASE"); ok {
+		if p == "" {
+			return nil, fmt.Errorf("ENVAULT_PASSPHRASE is set but empty")
+		}
 		fb.passphrase = []byte(p)
 		return fb.passphrase, nil
 	}

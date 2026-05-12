@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/envault/envault/internal/awssts"
+	"github.com/envault/envault/internal/dotenv"
 	"github.com/spf13/cobra"
 )
 
@@ -87,7 +88,7 @@ func runExport(cmd *cobra.Command, args []string) error {
 		}
 	case "dotenv":
 		for _, k := range keys {
-			fmt.Printf("%s=%s\n", k, dotenvQuote(vars[k]))
+			fmt.Printf("%s=%s\n", k, dotenv.Quote(vars[k]))
 		}
 	case "json":
 		enc := json.NewEncoder(os.Stdout)
@@ -98,22 +99,4 @@ func runExport(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
-}
-
-// dotenvQuote wraps a value in double quotes if it contains special characters.
-func dotenvQuote(value string) string {
-	needsQuoting := false
-	for _, c := range value {
-		if c == ' ' || c == '\n' || c == '\t' || c == '\r' || c == '"' || c == '\'' || c == '#' || c == '\\' {
-			needsQuoting = true
-			break
-		}
-	}
-
-	if !needsQuoting && len(value) > 0 {
-		return value
-	}
-
-	// Use fmt %q for proper escaping
-	return fmt.Sprintf("%q", value)
 }

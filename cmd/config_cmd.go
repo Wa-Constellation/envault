@@ -13,8 +13,8 @@ var configCmd = &cobra.Command{
 	Short: "Print or set configuration",
 	Long: `Without flags: print current configuration (backend, config path, vault path).
 
-With --backend: set the default backend.
-  envault config --backend <keyring|file>`,
+With --set-backend: set the default backend.
+  envault config --set-backend <keyring|file>`,
 	RunE: runConfig,
 }
 
